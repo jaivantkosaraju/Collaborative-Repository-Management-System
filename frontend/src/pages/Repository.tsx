@@ -190,10 +190,10 @@ export default function Repository() {
                   <span>{starStatus ? (repo?.stars ?? 0) + 1 : repo?.stars ?? 0}</span>
                 </button>
 
-                <button className="flex items-center space-x-1 px-4 py-2 bg-gray-700 rounded-md hover:bg-gray-600 transition-all">
+                {/* <button className="flex items-center space-x-1 px-4 py-2 bg-gray-700 rounded-md hover:bg-gray-600 transition-all">
                   <GitFork size={16} />
                   <span>{repo?.forks}</span>
-                </button>
+                </button> */}
 
 
               </div>

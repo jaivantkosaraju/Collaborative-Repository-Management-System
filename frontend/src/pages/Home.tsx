@@ -151,10 +151,10 @@ export default function Home() {
                   <Star className="h-4 w-4 mr-1 text-yellow-400" />
                   {repo.stars || 0}
                 </div>
-                <div className="flex items-center text-sm text-gray-400">
+                {/* <div className="flex items-center text-sm text-gray-400">
                   <GitFork className="h-4 w-4 mr-1" />
                   {repo.forks || 0}
-                </div>
+                </div> */}
                
               </div>
             </div>

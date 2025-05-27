@@ -362,10 +362,10 @@ export default function Profile() {
                         )}
                       </div>
                       <div className="flex items-center space-x-4 text-sm text-gray-400">
-                        <span className="flex items-center">
+                        {/* <span className="flex items-center">
                           <GitFork className="h-4 w-4 mr-1" />
                           {repo.Repository.forks}
-                        </span>
+                        </span> */}
                         <span className="flex items-center">
                           ⭐ {repo.Repository.stars}
                         </span>

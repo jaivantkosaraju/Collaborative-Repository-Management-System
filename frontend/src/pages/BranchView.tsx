@@ -6,34 +6,7 @@ import { timeAgo } from '../lib/timeAlgo';
 import AddFileModal from '../components/AddFileModal';
 
 // Mock data configuration
-export const MOCK_DATA = {
-  repositories: [
-    {
-      repo_id: 1,
-      creator_id: 1,
-      repo_name: 'demo-repo',
-      description: 'A demo repository',
-      visibility: 'Public' as const,
-      creation_date: new Date().toISOString(),
-      stars: 10,
-      forks: 5,
-    },
-    // Add more mock repositories as needed
-  ],
-  branches: [
-    {
-      branch_id: 1,
-      repo_id: 1,
-      name: 'main',
-      creator_id: 1,
-      created_at: new Date().toISOString(),
-      last_commit_id: 1,
-      parent_branch_id: null,
-      base_commit_id: null,
-    },
-    // Add more mock branches as needed
-  ],
-}; 
+
 interface FileItem {
   file_name: string;
   file_id: number;
