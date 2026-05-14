@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Settings, UserPlus, Trash2, Users, Lock, Globe, AlertTriangle, ChevronLeft } from 'lucide-react';
+import { UserPlus, Trash2, Lock, Globe, AlertTriangle, ChevronLeft, X } from 'lucide-react';
 import { ContributerDetails } from '../types/repository_types';
-import { BASE_URL, useAuth } from '../context/AuthContext';
+import { BASE_URL } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-// Add this at the top of your file after imports
-const LANGUAGE_COLORS = {
+
+const LANGUAGE_COLORS: Record<string, string> = {
   JavaScript: '#f1e05a',
   TypeScript: '#3178c6',
   Python: '#3572A5',
@@ -36,15 +36,14 @@ export default function RepositorySettings() {
     license: 'MIT License',
     language: '',
     languageColor: '',
-    tags: [] as string[]
+    tags: [] as string[],
+    newTag: ''
   });
 
   const [showAddContributor, setShowAddContributor] = useState(false);
   const [newContributor, setNewContributor] = useState({ creator_id: '', role: 'Contributor' });
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
-  const [showDeleteWarning, setShowDeleteWarning] = useState(false);
   const [contributors, setContributors] = useState<ContributerDetails[]>([]);
-  const { user } = useAuth();
   const [change, setChange] = useState(false);
 
   const fetchRepoDetails = async () => {
@@ -55,7 +54,6 @@ export default function RepositorySettings() {
       );
       const data = await response.json();
       if (response.ok) {
-        // Parse tags if they come as string
         const parsedTags = typeof data.data.tags === 'string'
           ? JSON.parse(data.data.tags)
           : data.data.tags || [];
@@ -67,7 +65,8 @@ export default function RepositorySettings() {
           license: data.data.license || 'MIT License',
           language: data.data.language || '',
           languageColor: data.data.languageColor || '',
-          tags: parsedTags
+          tags: parsedTags,
+          newTag: ''
         });
       }
     } catch (error) {
@@ -82,9 +81,7 @@ export default function RepositorySettings() {
         { credentials: 'include' }
       );
       const data = await response.json();
-      console.log("contributers ",data.data.contributors)
       if (data.message === "Successfully retrieved contributors") {
-
         setContributors(data.data.contributors);
       }
     } catch (error) {
@@ -96,7 +93,6 @@ export default function RepositorySettings() {
 
   const handleUpdateRepo = async () => {
     try {
-      // Ensure tags is an array before sending
       const tagsToSend = Array.isArray(repoDetails.tags) ? repoDetails.tags : [];
 
       const response = await fetch(
@@ -127,12 +123,12 @@ export default function RepositorySettings() {
           navigate(`/${creator_id}/${repoDetails.repo_name}/settings`);
         }
         setRepoDetails(prev => ({ ...prev, ...data.data }));
-        toast.success("updated settings")
+        toast.success("Updated settings");
         setChange(false);
       }
     } catch (error) {
       setError('Failed to update repository settings');
-      toast.error("Failed to update repository settings")
+      toast.error("Failed to update repository settings");
     }
   };
 
@@ -154,7 +150,6 @@ export default function RepositorySettings() {
       const data = await response.json();
   
       if (!response.ok) {
-        // Handle different error cases
         switch (response.status) {
           case 404:
             throw new Error(data.message || 'User not found');
@@ -169,13 +164,12 @@ export default function RepositorySettings() {
         }
       }
   
-      // Success case
       await fetchContributors();
       setShowAddContributor(false);
       setNewContributor({ creator_id: '', role: 'Contributor' });
       toast.success("Successfully added contributor");
   
-    } catch (error) {
+    } catch (error: any) {
       console.error('Add contributor error:', error);
       toast.error(error.message || 'Failed to add contributor');
     }
@@ -215,21 +209,18 @@ export default function RepositorySettings() {
 
       if (response.ok) {
         await fetchContributors();
-        toast.success("Removed Contributer")
+        toast.success("Removed contributor");
       }
     } catch (error) {
       setError('Failed to remove contributor');
-      toast.error("removed contributer")
+      toast.error("Failed to remove contributor");
     }
   };
 
-
-
   const handleDeleteRepository = async () => {
     if (deleteConfirmation !== repo_name) {
-      toast.error("Name didnt match")
-      setDeleteConfirmation("")
-      setShowDeleteWarning(true);
+      toast.error("Name didn't match");
+      setDeleteConfirmation("");
       return;
     }
 
@@ -243,52 +234,45 @@ export default function RepositorySettings() {
       );
 
       if (response.ok) {
-        toast.success("Deleted the repository")
+        toast.success("Deleted the repository");
         navigate('/');
       }
     } catch (error) {
       setError('Failed to delete repository');
-      toast.error("Failed to delete the repository")
+      toast.error("Failed to delete repository");
     }
   };
 
-
   useEffect(() => {
-    console.log("setloading true")
     setLoading(true);
     try {
       fetchRepoDetails();
       fetchContributors();
     } catch (error) {
-      console.log("error:", error)
+      console.log("error:", error);
+    } finally {
+      setLoading(false);
     }
-    finally {
-      console.log("set loading false")
-      setLoading(false)
-    }
-
   }, [creator_id, repo_name]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center">
-        Loading...
+      <div className="min-h-screen bg-slate-50 dark:bg-brand-dark flex items-center justify-center">
+        <div className="text-slate-500 dark:text-slate-400 font-bold text-sm animate-pulse">Loading configurations...</div>
       </div>
     );
   }
 
-  
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center">
-        <div className="bg-red-900/30 border border-red-800 rounded-md p-4 max-w-md">
-          <div className="flex items-center space-x-2">
-            <AlertTriangle className="h-5 w-5 text-red-400" />
-            <span>{error}</span>
-          </div>
+      <div className="min-h-screen bg-slate-50 dark:bg-brand-dark text-slate-900 dark:text-slate-100 flex items-center justify-center px-4">
+        <div className="bg-white dark:bg-brand-card border border-rose-200 dark:border-rose-950 rounded-3xl p-8 max-w-md w-full text-center shadow-lg">
+          <AlertTriangle className="h-12 w-12 text-rose-500 mx-auto mb-4" />
+          <h2 className="text-lg font-extrabold mb-2">Something went wrong</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-6">{error}</p>
           <button
             onClick={() => navigate(`/${creator_id}/${repo_name}/main`)}
-            className="mt-4 w-full px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
+            className="w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-750 text-white rounded-xl font-bold text-sm transition-all"
           >
             Back to Repository
           </button>
@@ -297,150 +281,168 @@ export default function RepositorySettings() {
     );
   }
 
-  // The rest of your existing return statement and JSX remains the same
-
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate(`/${creator_id}/${repo_name}/main`)}
-              className="p-2 hover:bg-gray-800 rounded-full"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <h1 className="text-2xl font-bold">Repository Settings</h1>
+    <div className="min-h-screen bg-slate-50 dark:bg-brand-dark text-slate-900 dark:text-slate-100 transition-colors duration-300 pb-16 py-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        
+        {/* Header and Return Button */}
+        <div className="flex items-center space-x-4 mb-8">
+          <button
+            onClick={() => navigate(`/${creator_id}/${repo_name}/main`)}
+            className="p-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition-all shadow-sm"
+            title="Back to Repository"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Repository Settings</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-0.5 uppercase tracking-wider">Managing {repo_name}</p>
           </div>
         </div>
 
-        <div className="space-y-6">
-          {/* Basic Settings */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Basic Settings</h2>
-            <div className="space-y-4">
+        <div className="space-y-8">
+          
+          {/* Basic Settings Card */}
+          <div className="bg-white dark:bg-brand-card border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm overflow-hidden transition-colors duration-300">
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/60">
+              <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Basic Information</h2>
+            </div>
+            <div className="p-6 sm:p-8 space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-2">Repository Name</label>
+                <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Repository Name</label>
                 <input
                   type="text"
                   value={repoDetails.repo_name}
-                  onChange={(e) => { setRepoDetails(prev => ({ ...prev, repo_name: e.target.value })), setChange(true) }}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  onChange={(e) => { setRepoDetails(prev => ({ ...prev, repo_name: e.target.value })); setChange(true); }}
+                  className="appearance-none block w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800 placeholder-slate-400 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 text-sm transition-all font-medium"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Description</label>
                 <textarea
                   value={repoDetails.description}
-                  onChange={(e) => { setRepoDetails(prev => ({ ...prev, description: e.target.value })), setChange(true) }}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  onChange={(e) => { setRepoDetails(prev => ({ ...prev, description: e.target.value })); setChange(true); }}
+                  className="appearance-none block w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800 placeholder-slate-400 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 text-sm transition-all font-medium resize-none"
                   rows={3}
                 />
               </div>
             </div>
           </div>
 
-          {/* Visibility Settings */}
-          <div className="bg-gray-800 rounded-lg p-6 ">
-            <h2 className="text-xl font-semibold mb-4">Repository Visibility</h2>
-            <div className="space-y-4">
+          {/* Visibility Settings Card */}
+          <div className="bg-white dark:bg-brand-card border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm overflow-hidden transition-colors duration-300">
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/60">
+              <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Repository Visibility</h2>
+            </div>
+            <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+              
               <button
-                onClick={() => { setRepoDetails({ ...repoDetails, visibility: 'Public' }), setChange(true) }}
-                className={`w-full flex items-start p-4 rounded-lg border ${repoDetails.visibility === 'Public'
-                    ? 'border-indigo-500 bg-indigo-500/10'
-                    : 'border-gray-700 hover:border-gray-600'
+                onClick={() => { setRepoDetails({ ...repoDetails, visibility: 'Public' }); setChange(true); }}
+                className={`w-full flex items-start p-5 rounded-2xl border transition-all ${repoDetails.visibility === 'Public'
+                    ? 'border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/20 ring-1 ring-indigo-600'
+                    : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50'
                   }`}
               >
-                <Globe className="h-6 w-6 text-green-400 mt-1" />
-                <div className="ml-3 text-left">
-                  <p className="font-medium">Public</p>
-                  <p className="text-sm text-gray-400">Anyone can see this repository</p>
+                <div className={`p-2 rounded-xl mr-3.5 flex-shrink-0 ${repoDetails.visibility === 'Public' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'}`}>
+                  <Globe className="h-5 w-5" />
+                </div>
+                <div className="text-left min-w-0 flex-1">
+                  <p className="font-bold text-slate-800 dark:text-white text-sm flex items-center">
+                    Public
+                    {repoDetails.visibility === 'Public' && <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full ml-2"></span>}
+                  </p>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">Visible on the web. Anyone can clone this repo.</p>
                 </div>
               </button>
 
               <button
-                onClick={() => { setRepoDetails({ ...repoDetails, visibility: 'Private' }), setChange(true) }}
-                className={`w-full flex items-start p-4 rounded-lg border ${repoDetails.visibility === 'Private'
-                    ? 'border-indigo-500 bg-indigo-500/10'
-                    : 'border-gray-700 hover:border-gray-600'
+                onClick={() => { setRepoDetails({ ...repoDetails, visibility: 'Private' }); setChange(true); }}
+                className={`w-full flex items-start p-5 rounded-2xl border transition-all ${repoDetails.visibility === 'Private'
+                    ? 'border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/20 ring-1 ring-indigo-600'
+                    : 'border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50'
                   }`}
               >
-                <Lock className="h-6 w-6 text-yellow-400 mt-1" />
-                <div className="ml-3 text-left">
-                  <p className="font-medium">Private</p>
-                  <p className="text-sm text-gray-400">Only contributors can see this repository</p>
+                <div className={`p-2 rounded-xl mr-3.5 flex-shrink-0 ${repoDetails.visibility === 'Private' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400' : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'}`}>
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div className="text-left min-w-0 flex-1">
+                  <p className="font-bold text-slate-800 dark:text-white text-sm flex items-center">
+                    Private
+                    {repoDetails.visibility === 'Private' && <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full ml-2"></span>}
+                  </p>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">You choose explicitly who can see and commit.</p>
                 </div>
               </button>
             </div>
-
-
           </div>
-          {/* Additional Settings */}
-          {/* Additional Settings */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Additional Settings</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">License</label>
-                <select
-                  value={repoDetails.license}
-                  onChange={(e) => {
-                    setRepoDetails(prev => ({ ...prev, license: e.target.value }));
-                    setChange(true);
-                  }}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="MIT License">MIT License</option>
-                  <option value="Apache License 2.0">Apache License 2.0</option>
-                  <option value="GNU GPL v3">GNU GPL v3</option>
-                  <option value="BSD 3-Clause">BSD 3-Clause</option>
-                </select>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Primary Language</label>
-                <select
-                  value={repoDetails.language}
-                  onChange={(e) => {
-                    const selectedLang = e.target.value;
-                    setRepoDetails(prev => ({
-                      ...prev,
-                      language: selectedLang,
-                      languageColor: LANGUAGE_COLORS[selectedLang] || '#000000'
-                    }));
-                    setChange(true);
-                  }}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">Select a language</option>
-                  {LANGUAGES.map(lang => (
-                    <option key={lang} value={lang}>
-                      {lang}
-                    </option>
-                  ))}
-                </select>
-                {repoDetails.language && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: repoDetails.languageColor }}
-                    />
-                    <span className="text-sm text-gray-400">
-                      {repoDetails.language}
-                    </span>
+          {/* Additional Metadata Card */}
+          <div className="bg-white dark:bg-brand-card border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm overflow-hidden transition-colors duration-300">
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/60">
+              <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Additional Properties</h2>
+            </div>
+            <div className="p-6 sm:p-8 space-y-6">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">License</label>
+                  <select
+                    value={repoDetails.license}
+                    onChange={(e) => {
+                      setRepoDetails(prev => ({ ...prev, license: e.target.value }));
+                      setChange(true);
+                    }}
+                    className="appearance-none block w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800 placeholder-slate-400 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 text-sm font-medium cursor-pointer transition-all"
+                  >
+                    <option value="MIT License">MIT License</option>
+                    <option value="Apache License 2.0">Apache License 2.0</option>
+                    <option value="GNU GPL v3">GNU GPL v3</option>
+                    <option value="BSD 3-Clause">BSD 3-Clause</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Primary Language</label>
+                  <div className="relative flex items-center">
+                    <select
+                      value={repoDetails.language}
+                      onChange={(e) => {
+                        const selectedLang = e.target.value;
+                        setRepoDetails(prev => ({
+                          ...prev,
+                          language: selectedLang,
+                          languageColor: LANGUAGE_COLORS[selectedLang] || '#000000'
+                        }));
+                        setChange(true);
+                      }}
+                      className="appearance-none block w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 text-sm font-medium cursor-pointer transition-all"
+                    >
+                      <option value="">Select primary language</option>
+                      {LANGUAGES.map(lang => (
+                        <option key={lang} value={lang}>
+                          {lang}
+                        </option>
+                      ))}
+                    </select>
+                    {repoDetails.language && (
+                      <div
+                        className="absolute right-10 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-sm"
+                        style={{ backgroundColor: repoDetails.languageColor }}
+                      />
+                    )}
                   </div>
-                )}
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Tags</label>
-                <div className="flex flex-wrap gap-2 mb-2">
+                <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Tags</label>
+                <div className="flex flex-wrap gap-1.5 mb-3">
                   {repoDetails.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="px-2 py-1 bg-gray-700 rounded-md flex items-center"
+                      className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-300 border border-indigo-100/80 dark:border-indigo-900/40 flex items-center"
                     >
-                      {tag}
+                      #{tag}
                       <button
                         onClick={() => {
                           setRepoDetails(prev => ({
@@ -449,22 +451,23 @@ export default function RepositorySettings() {
                           }));
                           setChange(true);
                         }}
-                        className="ml-2 text-gray-400 hover:text-red-400"
+                        className="ml-1.5 p-0.5 bg-indigo-200/50 hover:bg-rose-500/20 text-indigo-700 hover:text-rose-600 dark:bg-indigo-900/50 dark:text-indigo-300 dark:hover:bg-rose-900/40 rounded transition-colors"
                       >
-                        ×
+                        <X size={10} />
                       </button>
                     </span>
                   ))}
                 </div>
                 <input
                   type="text"
-                  placeholder="Add tags (comma-separated)"
+                  placeholder="Add a tag and press enter"
                   value={repoDetails.newTag || ''}
                   onChange={(e) => setRepoDetails(prev => ({ ...prev, newTag: e.target.value }))}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ',') {
                       e.preventDefault();
-                      const newTags = e.currentTarget.value
+                      const val = e.currentTarget.value;
+                      const newTags = val
                         .split(',')
                         .map(tag => tag.trim())
                         .filter(tag => tag && !repoDetails.tags.includes(tag));
@@ -479,150 +482,163 @@ export default function RepositorySettings() {
                       }
                     }
                   }}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="appearance-none block w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800 placeholder-slate-400 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 text-sm transition-all font-medium"
                 />
-                <p className="mt-1 text-sm text-gray-400">
-                  Press Enter or use commas to add multiple tags
-                </p>
               </div>
-            </div>
 
-            {/* Move save button here */}
-            {change && (
-              <button
-                className='flex items-center px-4 py-2 mt-4 bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors'
-                onClick={handleUpdateRepo}
-              >
-                Save Changes
-              </button>
-            )}
+              {change && (
+                <div className="border-t border-slate-100 dark:border-slate-800/60 pt-6">
+                  <button
+                    className="inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-extrabold rounded-xl shadow-md shadow-indigo-500/20 active:scale-[0.98] transition-all"
+                    onClick={handleUpdateRepo}
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-
-
-          {/* Contributors Section */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Contributors</h2>
+          {/* Contributors Section Card */}
+          <div className="bg-white dark:bg-brand-card border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm overflow-hidden transition-colors duration-300">
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/60 flex justify-between items-center">
+              <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Access & Collaborators</h2>
               <button
                 onClick={() => setShowAddContributor(true)}
-                className="flex items-center px-3 py-2 bg-indigo-600 rounded-md hover:bg-indigo-700"
+                className="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-all active:scale-95"
               >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Contributor
+                <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+                Invite
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {contributors.map((contributor) => (
                 <div
                   key={contributor.user_id}
-                  className="flex items-center justify-between p-4 bg-gray-750 rounded-lg"
+                  className="flex items-center justify-between p-6 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all"
                 >
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
                     <img
-                      src={contributor?.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(contributor.username)}`}
+                      src={contributor?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(contributor.username)}&background=4F46E5&color=fff`}
                       alt={contributor.username}
-                      className="h-10 w-10 rounded-full"
+                      className="h-9 w-9 rounded-full border border-slate-200 dark:border-slate-700"
                     />
-                    <div>
-                      <p className="font-medium">{contributor.username}</p>
-                      <p className="text-sm text-gray-400">{contributor.role}</p>
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-slate-800 dark:text-white truncate">{contributor.username}</p>
+                      <p className="text-xs font-medium text-slate-400 dark:text-slate-500">{contributor.role}</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3 ml-4 flex-shrink-0">
                     <select
                       value={contributor.role}
                       onChange={(e) => handleUpdateRole(contributor.user_id, e.target.value)}
-                      className="bg-gray-700 border border-gray-600 rounded-md px-2 py-1"
+                      className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 rounded-lg px-2.5 py-1.5 cursor-pointer focus:outline-none"
                     >
                       <option value="Contributor">Contributor</option>
                       <option value="Admin">Admin</option>
                     </select>
                     <button
                       onClick={() => handleRemoveContributor(contributor.user_id)}
-                      className="p-2 text-gray-400 hover:text-red-400 rounded-full hover:bg-gray-700"
+                      className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors"
+                      title="Remove collaborator"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
               ))}
+              {contributors.length === 0 && (
+                <div className="p-12 text-center text-slate-400 dark:text-slate-500 font-semibold text-sm">
+                  No active contributors found.
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Danger Zone */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-red-500 mb-4">Danger Zone</h2>
-            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4">
-              <h3 className="text-lg font-medium text-red-400">Delete Repository</h3>
-              <p className="text-sm text-gray-400 mt-1 mb-4">
-                Once you delete a repository, there is no going back. Please be certain.
+          {/* Danger Zone Card */}
+          <div className="bg-rose-50/50 dark:bg-red-950/10 border border-rose-200 dark:border-rose-950 rounded-3xl shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-rose-200/60 dark:border-rose-950/60">
+              <h2 className="text-lg font-extrabold tracking-tight text-rose-700 dark:text-red-400">Danger Zone</h2>
+            </div>
+            <div className="p-6 sm:p-8">
+              <h3 className="text-base font-extrabold text-rose-700 dark:text-red-400 mb-1">Delete this repository</h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium mb-6">
+                Once deleted, your code, issue trackers, pull requests, and branch history are deleted forever. Please proceed with extreme caution.
               </p>
-              <div className="space-y-3">
+              <div className="max-w-md space-y-3">
                 <input
                   type="text"
-                  placeholder={`Type "${repo_name}" to confirm`}
+                  placeholder={`Type "${repo_name}" to authorize deletion`}
                   value={deleteConfirmation}
                   onChange={(e) => setDeleteConfirmation(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="appearance-none block w-full px-4 py-2 border border-rose-200 dark:border-rose-900/80 placeholder-rose-300 dark:placeholder-red-900/50 text-rose-900 dark:text-red-100 bg-white dark:bg-slate-950/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 text-sm font-bold transition-all"
                 />
                 <button
                   onClick={handleDeleteRepository}
-                  className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                  className="inline-flex items-center px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-extrabold rounded-xl shadow-md shadow-rose-600/10 active:scale-[0.98] transition-all w-full justify-center sm:w-auto"
                 >
                   Delete this repository
                 </button>
               </div>
             </div>
           </div>
+
         </div>
 
-        {/* Add Contributor Modal */}
+        {/* Add Contributor Modal Overlay */}
         {showAddContributor && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-medium mb-4">Add Contributor</h3>
+          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-brand-card border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl transition-colors duration-300">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">Invite Contributor</h3>
+                <button onClick={() => setShowAddContributor(false)} className="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Username</label>
+                  <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Username</label>
                   <input
                     type="text"
+                    placeholder="e.g. johndoe"
                     value={newContributor.creator_id}
                     onChange={(e) => setNewContributor(prev => ({ ...prev, creator_id: e.target.value }))}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="appearance-none block w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/40 text-sm font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Role</label>
+                  <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Role</label>
                   <select
                     value={newContributor.role}
                     onChange={(e) => setNewContributor(prev => ({ ...prev, role: e.target.value }))}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="appearance-none block w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/40 text-sm font-medium cursor-pointer"
                   >
                     <option value="Contributor">Contributor</option>
                     <option value="Admin">Admin</option>
                   </select>
                 </div>
-                <div className="flex justify-end space-x-3 mt-6">
+                <div className="flex justify-end space-x-3 mt-8 pt-2">
                   <button
                     onClick={() => setShowAddContributor(false)}
-                    className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm transition-all active:scale-95"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleAddContributor}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-indigo-500/10 active:scale-95"
                   >
-                    Add
+                    Send Invitation
                   </button>
                 </div>
               </div>
             </div>
           </div>
         )}
+        
       </div>
     </div>
-  )
+  );
 }

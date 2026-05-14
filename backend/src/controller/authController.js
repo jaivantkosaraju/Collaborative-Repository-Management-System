@@ -26,7 +26,7 @@ export const signup = async (req, res) => {
 
     const existing = await User.findOne({ where: { username } });
     if (existing) return res.status(400).json({ error: 'Username already exists' });
-    const existing_email = await User.findOne({ where: { username } });
+    const existing_email = await User.findOne({ where: { email } });
     if (existing_email) return res.status(400).json({ error: 'Email already exists' });
     const salt = await bcrypt.genSalt(14)
     const hashed = await bcrypt.hash(password,salt);
@@ -38,7 +38,15 @@ export const signup = async (req, res) => {
     });
 
     createTokenAndSetCookie(user, res);
-    res.status(201).json({ message: 'Signup successful', user: { id: user.user_id, username: user.username } });
+    res.status(201).json({ 
+      message: 'Signup successful', 
+      user: { 
+        user_id: user.user_id, 
+        username: user.username,
+        email: user.email,
+        full_name: user.full_name
+      } 
+    });
   } catch (err) {
     console.error('[Signup Error]', err);
     res.status(500).json({ error: 'Signup failed' });
@@ -55,7 +63,17 @@ export const login = async (req, res) => {
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
     createTokenAndSetCookie(user, res);
-    res.status(200).json({ message: 'Login successful', user: { id: user.user_id, username: user.username } });
+    res.status(200).json({ 
+      message: 'Login successful', 
+      user: { 
+        user_id: user.user_id, 
+        username: user.username,
+        email: user.email,
+        full_name: user.full_name,
+        avatar: user.avatar,
+        bio: user.bio
+      } 
+    });
   } catch (err) {
     console.error('[Login Error]', err);
     res.status(500).json({ error: 'Login failed' });

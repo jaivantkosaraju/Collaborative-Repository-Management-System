@@ -26,7 +26,7 @@ function App() {
     <AuthProvider>
       <Router>
         <Toaster/>
-        <div className="min-h-screen bg-gray-900 text-gray-100  ">
+        <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#0A0F1C] dark:text-slate-100 transition-colors duration-300">
           <Header />
 
           <main>

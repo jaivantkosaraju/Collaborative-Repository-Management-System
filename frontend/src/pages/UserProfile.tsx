@@ -38,61 +38,68 @@ export default function UserProfile() {
   ];
   
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-brand-dark text-slate-900 dark:text-slate-100 transition-colors duration-300 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
           {/* Profile sidebar */}
-          <div className="md:col-span-1">
-            <div className="bg-gray-800 rounded-lg shadow-lg p-6">
-              <div className="flex flex-col items-center text-center mb-6">
-                <img 
-                  src={mockUser.avatar} 
-                  alt={`${mockUser.full_name}'s avatar`}
-                  className="w-32 h-32 rounded-full mb-4 border-2 border-indigo-500"
-                />
-                <h1 className="text-2xl font-bold text-white">{mockUser.full_name}</h1>
-                <p className="text-gray-400">@{mockUser.username}</p>
+          <div className="lg:col-span-1">
+            <div className="bg-white dark:bg-brand-card border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm p-6 sm:p-8 text-center">
+              <div className="flex flex-col items-center mb-6">
+                <div className="relative">
+                  <img 
+                    src={mockUser.avatar} 
+                    alt={`${mockUser.full_name}'s avatar`}
+                    className="w-28 h-28 rounded-full border-4 border-slate-100 dark:border-slate-800 shadow-md object-cover mb-4"
+                  />
+                </div>
+                <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">{mockUser.full_name}</h1>
+                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 mt-0.5">@{mockUser.username}</p>
               </div>
               
-              <div className="text-left space-y-3">
-                <p className="text-gray-300">{mockUser.bio}</p>
+              <div className="text-left space-y-4 border-t border-slate-100 dark:border-slate-800/60 pt-5 mt-5">
+                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium bg-slate-50 dark:bg-slate-950/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                  {mockUser.bio}
+                </p>
                 
-                <div className="flex items-center text-gray-400">
-                  <MapPin size={16} className="mr-2" />
-                  <span>{mockUser.location}</span>
-                </div>
-                
-                <div className="flex items-center text-gray-400">
-                  <LinkIcon size={16} className="mr-2" />
-                  <a href={mockUser.website} className="text-indigo-400 hover:text-indigo-300">
-                    {mockUser.website.replace('https://', '')}
-                  </a>
-                </div>
-                
-                <div className="flex items-center text-gray-400">
-                  <Mail size={16} className="mr-2" />
-                  <span>{mockUser.email}</span>
-                </div>
-                
-                <div className="flex items-center text-gray-400">
-                  <Calendar size={16} className="mr-2" />
-                  <span>Joined {mockUser.joined}</span>
+                <div className="space-y-3 text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold">
+                  <div className="flex items-center">
+                    <MapPin size={16} className="mr-3 text-slate-400" />
+                    <span>{mockUser.location}</span>
+                  </div>
+                  
+                  <div className="flex items-center truncate">
+                    <LinkIcon size={16} className="mr-3 text-slate-400 flex-shrink-0" />
+                    <a href={mockUser.website} className="text-indigo-600 dark:text-indigo-400 hover:underline truncate">
+                      {mockUser.website.replace(/(^\w+:|^)\/\//, '')}
+                    </a>
+                  </div>
+                  
+                  <div className="flex items-center truncate">
+                    <Mail size={16} className="mr-3 text-slate-400 flex-shrink-0" />
+                    <span>{mockUser.email}</span>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <Calendar size={16} className="mr-3 text-slate-400" />
+                    <span>Joined {mockUser.joined}</span>
+                  </div>
                 </div>
               </div>
               
-              <div className="mt-6 pt-6 border-t border-gray-700">
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <div className="text-xl font-bold text-white">12</div>
-                    <div className="text-xs text-gray-400">Repositories</div>
+              <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/60">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-slate-50 dark:bg-slate-950/30 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                    <div className="text-lg font-extrabold text-slate-900 dark:text-white">12</div>
+                    <div className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">Repos</div>
                   </div>
-                  <div>
-                    <div className="text-xl font-bold text-white">148</div>
-                    <div className="text-xs text-gray-400">Followers</div>
+                  <div className="bg-slate-50 dark:bg-slate-950/30 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                    <div className="text-lg font-extrabold text-slate-900 dark:text-white">148</div>
+                    <div className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">Fans</div>
                   </div>
-                  <div>
-                    <div className="text-xl font-bold text-white">67</div>
-                    <div className="text-xs text-gray-400">Following</div>
+                  <div className="bg-slate-50 dark:bg-slate-950/30 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                    <div className="text-lg font-extrabold text-slate-900 dark:text-white">67</div>
+                    <div className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">Gov</div>
                   </div>
                 </div>
               </div>
@@ -100,60 +107,72 @@ export default function UserProfile() {
           </div>
           
           {/* Main content */}
-          <div className="md:col-span-3">
-            <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-6">
-              <div className="border-b border-gray-700 p-4">
-                <h2 className="text-xl font-semibold flex items-center">
-                  <Book size={20} className="mr-2" />
+          <div className="lg:col-span-3 space-y-8">
+            <div className="bg-white dark:bg-brand-card border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm overflow-hidden transition-colors duration-300">
+              <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/60 flex justify-between items-center">
+                <h2 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center">
+                  <Book size={18} className="mr-2.5 text-indigo-600 dark:text-indigo-400" />
                   Repositories
                 </h2>
               </div>
               
-              <div className="divide-y divide-gray-700">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {mockRepositories.map((repo, index) => (
-                  <div key={index} className="p-4 hover:bg-gray-750 transition-all">
-                    <div className="flex justify-between items-start mb-2">
-                      <Link 
-                        to={`/${username}/${repo.name}`}
-                        className="text-lg font-medium text-indigo-400 hover:text-indigo-300"
-                      >
-                        {repo.name}
-                      </Link>
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-1 text-gray-400">
-                          <Star size={16} className="text-yellow-400" />
+                  <div key={index} className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all duration-200">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-extrabold text-indigo-600 dark:text-indigo-400">
+                          <Link 
+                            to={`/${username}/${repo.name}`}
+                            className="hover:underline"
+                          >
+                            {repo.name}
+                          </Link>
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5 font-medium">
+                          {repo.description}
+                        </p>
+                        
+                        <div className="mt-4 flex items-center gap-4 text-xs font-semibold text-slate-400">
+                          <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 px-2 py-0.5 rounded-md border border-slate-100 dark:border-slate-800/50">
+                            <span 
+                              className="inline-block w-2.5 h-2.5 rounded-full mr-1.5" 
+                              style={{ backgroundColor: repo.languageColor }}
+                            ></span>
+                            <span>{repo.language}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-4 text-xs font-bold text-slate-400 self-start">
+                        <div className="flex items-center text-amber-500 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 px-2.5 py-1 rounded-lg">
+                          <Star size={13} className="mr-1 text-amber-500 fill-amber-500" />
                           <span>{repo.stars}</span>
                         </div>
-                        <div className="flex items-center space-x-1 text-gray-400">
-                          <GitFork size={16} />
+                        <div className="flex items-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 px-2.5 py-1 rounded-lg">
+                          <GitFork size={13} className="mr-1" />
                           <span>{repo.forks}</span>
                         </div>
                       </div>
-                    </div>
-                    <p className="text-gray-300 mb-3">{repo.description}</p>
-                    <div className="flex items-center">
-                      <span 
-                        className="inline-block w-3 h-3 rounded-full mr-2" 
-                        style={{ backgroundColor: repo.languageColor }}
-                      ></span>
-                      <span className="text-sm text-gray-400">{repo.language}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
             
-            <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-              <div className="border-b border-gray-700 p-4">
-                <h2 className="text-xl font-semibold flex items-center">
-                  <Users size={20} className="mr-2" />
+            <div className="bg-white dark:bg-brand-card border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm overflow-hidden transition-colors duration-300">
+              <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/60">
+                <h2 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center">
+                  <Users size={18} className="mr-2.5 text-indigo-600 dark:text-indigo-400" />
                   Activity
                 </h2>
               </div>
               
-              <div className="p-4">
-                <div className="flex items-center justify-center h-40 text-gray-500">
-                  No recent activity to show
+              <div className="p-12">
+                <div className="flex flex-col items-center justify-center text-center text-slate-400">
+                  <Users size={36} className="mb-3 opacity-30" />
+                  <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200">No recent activity</p>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">This user hasn't contributed anything publicly yet.</p>
                 </div>
               </div>
             </div>

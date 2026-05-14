@@ -160,3 +160,49 @@ export const updateIssue = async (req, res) => {
         });
     }
 };
+
+export const deleteIssue = async (req, res) => {
+    try {
+        const { issue_id } = req.params;
+        const issue = await Issue.findByPk(issue_id);
+
+        if (!issue) {
+            return res.status(404).json({ message: "Issue not found" });
+        }
+
+        await issue.destroy();
+        res.status(200).json({ message: "Issue deleted successfully" });
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+export const clearResolvedIssues = async (req, res) => {
+    try {
+        const { creator_id, repo_name } = req.params;
+        const repository = await Repository.findOne({
+            where: { creator_id, repo_name }
+        });
+
+        if (!repository) {
+            return res.status(404).json({ message: "Repository not found" });
+        }
+
+        await Issue.destroy({
+            where: {
+                repo_id: repository.repo_id,
+                status: 'Closed'
+            }
+        });
+
+        res.status(200).json({ message: "Resolved issues cleared successfully" });
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};

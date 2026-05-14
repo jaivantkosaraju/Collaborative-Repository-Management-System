@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.ok) {
         setUser(data.user);
       } else {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || data.error || 'Login failed');
       }
     } catch (err) {
       throw new Error(err.message ||'Failed to login');
@@ -74,10 +74,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.ok) {
         setUser(data.user);
       } else {
-        throw new Error(data.message || 'Signup failed');
+        throw new Error(data.message || data.error || 'Signup failed');
       }
     } catch (err) {
       console.error('Signup error:', err);
+      throw new Error(err.message || 'Failed to signup');
     } finally {
       setLoading(false);
     }

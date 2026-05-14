@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, AlertCircle, CheckCircle, Clock, User,Edit, Search } from 'lucide-react';
+import { ChevronLeft, Plus, AlertCircle, CheckCircle, Clock, User, Edit, Search, Trash2 } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import { BASE_URL, useAuth } from '../context/AuthContext';
 import { User as User_template } from '../types/auth';
 import { Issue } from '../types/repository_types';
 import { timeAgo } from '../lib/timeAlgo';
+import toast from 'react-hot-toast';
 
 interface Issueitems extends Issue {
   assignee: User_template;
@@ -113,6 +114,42 @@ export default function Issues() {
     navigate(`/${creator_id}/${repo_name}/issues/new`);
   };
 
+  const handleDeleteIssue = async (issueId: number) => {
+    if (!window.confirm("Are you sure you want to delete this issue?")) return;
+    try {
+      const response = await fetch(
+        `${BASE_URL}/issues/${creator_id}/${repo_name}/${issueId}`,
+        { method: 'DELETE', credentials: 'include' }
+      );
+      if (response.ok) {
+        toast.success("Issue deleted successfully");
+        fetchIssues();
+      } else {
+        throw new Error("Failed to delete issue");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete issue");
+    }
+  };
+
+  const handleClearResolved = async () => {
+    if (!window.confirm("Are you sure you want to permanently remove all resolved (closed) issues?")) return;
+    try {
+      const response = await fetch(
+        `${BASE_URL}/issues/${creator_id}/${repo_name}/clear-resolved`,
+        { method: 'DELETE', credentials: 'include' }
+      );
+      if (response.ok) {
+        toast.success("Resolved issues cleared successfully");
+        fetchIssues();
+      } else {
+        throw new Error("Failed to clear resolved issues");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to clear resolved issues");
+    }
+  };
+
   // Add search functionality
   useEffect(() => {
     const filteredIssues = issues.filter(issue =>
@@ -131,128 +168,132 @@ export default function Issues() {
   const AssigneeModal = () => {
     if (!showAssignModal) return null;
 
-
-
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">
+      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white dark:bg-brand-card border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-xl animate-in fade-in zoom-in-95 duration-200">
           {user?.user_id == selectedIssue?.creator_id ? (
             <>
-              <div className="flex justify-between items-center mb-4">
-
-                <h3 className="text-lg font-medium">Assign Issue</h3>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">Assign Issue</h3>
                 <button
                   onClick={() => setShowAssignModal(false)}
-                  className="text-gray-400 hover:text-white"
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 h-8 w-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 >
                   ×
                 </button>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 <button
                   onClick={() => {
                     handleAssign(null);
                     setShowAssignModal(false);
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-md flex items-center"
+                  className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-950/30 rounded-xl flex items-center text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-transparent hover:border-slate-100 dark:hover:border-slate-800/50 transition-all"
                 >
-                  <User className="h-5 w-5 mr-2" />
+                  <User className="h-5 w-5 mr-3 text-slate-400" />
                   <span>Unassigned</span>
                 </button>
                 {contributors?.map((contributor) => (
                   <button
                     key={contributor.user_id}
                     onClick={() => handleAssign(contributor.user_id)}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-md flex items-center"
+                    className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-950/30 rounded-xl flex items-center text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-transparent hover:border-slate-100 dark:hover:border-slate-800/50 transition-all"
                   >
                     <img
                       src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
                         contributor.full_name || contributor.username
-                      )}`}
+                      )}&background=4F46E5&color=fff`}
                       alt={contributor.username}
-                      className="h-5 w-5 rounded-full mr-2"
+                      className="h-6 w-6 rounded-full mr-3 shadow-sm"
                     />
                     <span>{contributor.username}</span>
                   </button>
                 ))}
               </div>
             </>
-          ):(
+          ) : (
             <>
-             <div className="flex justify-between items-center mb-4">
-              Only Creator of the Issue can assign the issue to a User
-              <button
+              <div className="flex justify-between items-start gap-4">
+                <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                  Only the creator of the issue can assign this issue to a contributor.
+                </p>
+                <button
                   onClick={() => setShowAssignModal(false)}
-                  className="text-gray-400 hover:text-white px-9"
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 h-8 w-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex-shrink-0 transition-all"
                 >
                   ×
                 </button>
-             </div>
+              </div>
             </>
           )}
-
         </div>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-brand-dark text-slate-900 dark:text-slate-100 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate(`/${creator_id}/${repo_name}/main`)}
-              className="p-2 hover:bg-gray-800 rounded-full"
+              className="p-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition-all"
+              aria-label="Go back"
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-5 w-5" />
             </button>
-            <h1 className="text-2xl font-bold text-white">Issues</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Issues</h1>
           </div>
           <button
             onClick={handleCreateIssue}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/20 rounded-xl transition-all active:scale-95 flex-shrink-0 self-start sm:self-auto"
           >
-            <Plus className="h-5 w-5 mr-2" />
+            <Plus className="h-5 w-5 mr-1.5" />
             <span>New Issue</span>
           </button>
         </div>
 
-        <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-6">
-          <div className="p-4 border-b border-gray-700">
+        <div className="bg-white dark:bg-brand-card border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden mb-6 transition-colors duration-300">
+          <div className="p-5 border-b border-slate-100 dark:border-slate-800/60">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setFilter('All')}
-                  className={`px-3 py-1 rounded-md ${filter === 'All' ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setFilter('Open')}
-                  className={`px-3 py-1 rounded-md ${filter === 'Open' ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                >
-                  Open
-                </button>
-                <button
-                  onClick={() => setFilter('Closed')}
-                  className={`px-3 py-1 rounded-md ${filter === 'Closed' ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                >
-                  Closed
-                </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-950/50 rounded-xl border border-slate-200/30 dark:border-slate-800/30">
+                  {(['All', 'Open', 'Closed'] as const).map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => setFilter(opt)}
+                      className={`px-4 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all ${
+                        filter === opt 
+                          ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-white shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+                
+                {issues.some(issue => issue.status === 'Closed') && (
+                  <button
+                    onClick={handleClearResolved}
+                    className="inline-flex items-center px-4 py-2 text-xs font-extrabold text-red-600 hover:text-white dark:text-red-400 dark:hover:text-white border border-red-200 dark:border-red-900/30 hover:bg-red-600 dark:hover:bg-red-600/80 rounded-xl bg-red-50/30 dark:bg-red-950/10 shadow-sm transition-all active:scale-95"
+                    title="Permanently remove all closed issues"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                    Clear Resolved
+                  </button>
+                )}
               </div>
-              <div className="relative">
+              <div className="relative w-full md:w-72">
                 <input
                   type="text"
                   placeholder="Search issues..."
-                  className="w-full md:w-64 p-2 pl-8 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800/80 rounded-xl bg-white dark:bg-slate-950/20 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 text-sm shadow-sm transition-all"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <Search className="h-4 w-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="h-4 w-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
               </div>
             </div>
           </div>
@@ -260,85 +301,103 @@ export default function Issues() {
           {loading ? (
             <SkeletonLoader type="table" />
           ) : (
-            <div className="divide-y divide-gray-700">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {issues.length === 0 ? (
-                <div className="p-8 text-center text-gray-400">
-                  <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-xl font-medium mb-2">No issues found</h3>
-                  <p>There are no issues matching your current filter.</p>
+                <div className="p-12 text-center text-slate-400 dark:text-slate-500">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">No issues found</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">There are no issues matching your current filter.</p>
                 </div>
               ) : (
                 filteredIssues.map((issue) => (
                   <div
                     key={issue.issue_id}
-                    className="p-4 hover:bg-gray-750 cursor-pointer transition-colors"
+                    className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all duration-200"
                   >
                     <div className="flex items-start">
-                      <div className="mr-4 mt-1">
+                      <div className="mr-4 mt-0.5">
                         {issue.status === 'Open' ? (
-                          <AlertCircle className="h-5 w-5 text-green-500" />
+                          <div className="h-8 w-8 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center flex-shrink-0">
+                            <AlertCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                          </div>
                         ) : (
-                          <CheckCircle className="h-5 w-5 text-gray-500" />
+                          <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                            <CheckCircle className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                          </div>
                         )}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-medium text-white">{issue.issue_title}</h3>
-                          {/* // Update the issue card's assignee section in your existing JSX */}
-                          <div className="flex items-center space-x-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-1">
+                          <h3 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200 truncate">
+                            {issue.issue_title}
+                          </h3>
+                          <div className="flex items-center space-x-2 flex-shrink-0 self-start sm:self-auto">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedIssue(issue);
                                 setShowAssignModal(true);
                               }}
-                              className="flex items-center space-x-1 bg-gray-700 px-2 py-1 rounded-full hover:bg-gray-600"
+                              className="inline-flex items-center space-x-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-800 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 transition-all shadow-sm"
                             >
                               {issue?.assignee_id ? (
                                 <>
                                   <img
-                                    src={issue.assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(issue.assignee?.full_name as string)}`}
+                                    src={issue.assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(issue.assignee?.full_name || issue.assignee?.username || 'User')}&background=4F46E5&color=fff`}
                                     alt={issue.assignee.username}
-                                    className="h-5 w-5 rounded-full"
+                                    className="h-4 w-4 rounded-full"
                                   />
-                                  <span className="text-sm">{issue.assignee.username}</span>
+                                  <span>{issue.assignee.username}</span>
                                 </>
                               ) : (
                                 <>
-                                  <User className="h-4 w-4" />
-                                  <span className="text-sm">Unassigned</span>
+                                  <User className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+                                  <span>Unassigned</span>
                                 </>
                               )}
                             </button>
                             {canEditIssue(issue) && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/${creator_id}/${repo_name}/issues/${issue.issue_id}/edit`);
-              }}
-              className="p-1 text-gray-400 hover:text-white"
-              title="Edit issue"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-          )}
+                              <div className="flex items-center space-x-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/${creator_id}/${repo_name}/issues/${issue.issue_id}/edit`);
+                                  }}
+                                  className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 border border-slate-100 dark:border-slate-800 rounded-lg transition-all"
+                                  title="Edit issue"
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteIssue(issue.issue_id);
+                                  }}
+                                  className="p-1.5 bg-slate-50 hover:bg-red-50 dark:bg-slate-900 dark:hover:bg-red-950/30 text-slate-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400 border border-slate-100 dark:border-slate-800 rounded-lg transition-all"
+                                  title="Delete issue"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <p className="mt-1 text-gray-400 line-clamp-2">{issue.issue_description}</p>
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 font-medium">
+                          {issue.issue_description}
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400 dark:text-slate-500 font-semibold">
                           {issue?.labels?.map((label, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 text-xs rounded-full bg-gray-700 text-gray-300"
+                              className="px-2 py-0.5 text-[11px] rounded-md bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400 border border-indigo-100/80 dark:border-indigo-900/50"
                             >
                               {label}
                             </span>
                           ))}
-                          <div className="flex items-center text-sm text-gray-400">
-                            <Clock className="h-4 w-4 mr-1" />
-                            <span>Opened {timeAgo(issue.creation_date)} by {issue.creator.username}</span>
+                          <div className="flex items-center">
+                            <Clock className="h-3.5 w-3.5 mr-1 text-slate-400 dark:text-slate-500" />
+                            <span>Opened {timeAgo(issue.creation_date)} by <span className="text-slate-600 dark:text-slate-300">{issue.creator.username}</span></span>
                           </div>
-
                         </div>
                       </div>
                     </div>
@@ -351,6 +410,5 @@ export default function Issues() {
       </div>
       {showAssignModal && <AssigneeModal />}
     </div>
-
   );
 }
